@@ -38,6 +38,7 @@ impl<T> Nr<T> {
 
 impl<T: ?Sized> Nr<T> {
     /// Create weak reference of this node.
+    #[must_use]
     pub fn downgrade(this: &Self) -> Nw<T> {
         this.base.set_self_ref(Nr::clone_as_self_ref(this));
         Nw::from_base(Rc::downgrade(&this.base))

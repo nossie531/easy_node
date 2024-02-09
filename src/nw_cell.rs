@@ -18,6 +18,7 @@ impl<T> NwCell<T> {
     /// Calling [`upgrade`] on the return value always gives [`None`].
     ///
     /// [`upgrade`]: NwCell::upgrade
+    #[must_use]
     pub fn new() -> Self {
         Self(Nw::new())
     }
@@ -27,16 +28,19 @@ impl<T: ?Sized> NwCell<T> {
     /// Get strong reference of this node.
     ///
     /// Returns [`None`] if the inner value has since been dropped.
+    #[must_use]
     pub fn upgrade(&self) -> Option<&NrCell<T>> {
         self.0.upgrade().map(|x| unsafe { std::mem::transmute(x) })
     }
 
     /// Get the number of strong reference of this node.
+    #[must_use]
     pub fn strong_count(&self) -> usize {
         self.0.strong_count()
     }
 
     /// Get the number of weak reference of this node.
+    #[must_use]
     pub fn weak_count(&self) -> usize {
         self.0.weak_count()
     }

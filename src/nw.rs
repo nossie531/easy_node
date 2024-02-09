@@ -19,6 +19,7 @@ impl<T> Nw<T> {
     /// Calling [`upgrade`] on the return value always gives [`None`].
     ///
     /// [`upgrade`]: Nw::upgrade
+    #[must_use]
     pub fn new() -> Self {
         Self { base: Weak::new() }
     }
@@ -28,17 +29,20 @@ impl<T: ?Sized> Nw<T> {
     /// Get strong reference of this node.
     ///
     /// Returns [`None`] if the inner value has since been dropped.
+    #[must_use]
     pub fn upgrade(&self) -> Option<&Nr<T>> {
         Node::to_self_ref(self)
     }
 
     /// Get the number of strong reference of this node.
+    #[must_use]
     pub fn strong_count(&self) -> usize {
         let self_ref_count = self.base.weak_count().min(1);
         self.base.strong_count() - self_ref_count
     }
 
     /// Get the number of weak reference of this node.
+    #[must_use]
     pub fn weak_count(&self) -> usize {
         self.base.weak_count()
     }

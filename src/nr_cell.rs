@@ -31,6 +31,7 @@ impl<T> NrCell<T> {
 
 impl<T: ?Sized> NrCell<T> {
     /// Create weak reference of this node.
+    #[must_use]
     pub fn downgrade(this: &Self) -> NwCell<T> {
         NwCell(Base::downgrade(&this.0))
     }
