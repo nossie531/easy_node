@@ -18,4 +18,8 @@ managing graph data structures.
 
 These smart pointers behavior is similar to `Rc` and `Weak`.<br/>
 However, there are several important differences between them.<br/>
+
+* This crate smart pointer comparison is based on location.
+* This crate weak reference upgrade returns strong reference location.
+
 See the API documentation for details.
