@@ -20,7 +20,8 @@ fn upgrade() {
     with_droped();
     with_single();
     with_double();
-    with_cyclic();
+    with_self_cycle();
+    with_parent_and_child_cycle();
 
     fn with_empty() {
         let target = NwCell::<()>::new();
@@ -65,9 +66,31 @@ fn upgrade() {
         });
     }
 
-    fn with_cyclic() {
+    fn with_self_cycle() {
         DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new_cyclic(|w| CyclicCell::new(tracer.new_item(), w));
+            let nr = NrCell::new_cyclic(|w| {
+                let value = tracer.new_item();
+                CyclicCell::new(value, w)
+            });
+
+            let target = NrCell::downgrade(&nr);
+
+            let result = target.upgrade();
+
+            assert_eq!(result, Some(&nr));
+        });
+    }
+
+    fn with_parent_and_child_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new_cyclic(|w| {
+                let c_value = tracer.new_item();
+                let p_value = tracer.new_item();
+                let child = NrCell::new(ChildCell::new(c_value, w.clone()));
+                let parent = ParentCell::new(p_value, child);
+                parent
+            });
+
             let target = NrCell::downgrade(&nr);
 
             let result = target.upgrade();

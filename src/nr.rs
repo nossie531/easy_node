@@ -32,7 +32,14 @@ impl<T> Nr<T> {
     {
         let conv_arg = |w: &_| Nw::from_base(Weak::clone(w));
         let base = Rc::new_cyclic(|w| Node::new(data_fn(&conv_arg(w))));
-        Self::from_base(base)
+        let weak_saved = Rc::weak_count(&base) > 0;
+        let result = Self::from_base(base);
+
+        if weak_saved {
+            Nr::set_self_ref(&result);
+        }
+
+        result
     }
 }
 
@@ -40,7 +47,10 @@ impl<T: ?Sized> Nr<T> {
     /// Create weak reference of this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> Nw<T> {
-        this.base.set_self_ref(Nr::clone_as_self_ref(this));
+        if Nr::weak_count(this) == 0 {
+            Nr::set_self_ref(this);
+        }
+
         Nw::from_base(Rc::downgrade(&this.base))
     }
 
@@ -63,11 +73,11 @@ impl<T: ?Sized> Nr<T> {
         }
     }
 
-    /// Clone reference as self-reference.
-    fn clone_as_self_ref(this: &Self) -> Self {
-        let mut result = this.clone();
-        result.for_self_ref = true;
-        result
+    /// Set self-reference.
+    fn set_self_ref(this: &Self) {
+        let mut self_ref = this.clone();
+        self_ref.for_self_ref = true;
+        this.base.set_self_ref(self_ref);
     }
 }
 

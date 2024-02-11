@@ -21,23 +21,52 @@ fn new() {
 
 #[test]
 fn new_cyclic() {
-    DropTracer::test_drop(|tracer| {
-        let result = Nr::new_cyclic(|w| Cyclic::new((42, tracer.new_item()), w));
+    with_self_cycle();
+    with_parent_and_child_cycle();
 
-        assert_eq!(result.val().0, 42);
-        assert_eq!(result.me(), &Nr::downgrade(&result));
-        assert_eq!(Nr::strong_count(&result), 1);
-        assert_eq!(Nr::weak_count(&result), 1);
-        assert_eq!(Nw::strong_count(result.me()), 1);
-        assert_eq!(Nw::weak_count(result.me()), 1);
-    });
+    fn with_self_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let result = Nr::new_cyclic(|w| {
+                let value = (42, tracer.new_item());
+                Cyclic::new(value, w)
+            });
+
+            assert_eq!(result.val().0, 42);
+            assert_eq!(result.me(), &Nr::downgrade(&result));
+            assert_eq!(Nr::strong_count(&result), 1);
+            assert_eq!(Nr::weak_count(&result), 1);
+            assert_eq!(Nw::strong_count(result.me()), 1);
+            assert_eq!(Nw::weak_count(result.me()), 1);
+        });
+    }
+
+    fn with_parent_and_child_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let result = Nr::new_cyclic(|w| {
+                let c_value = tracer.new_item();
+                let p_value = tracer.new_item();
+                let child = Nr::new(Child::new(c_value, w.clone()));
+                let parent = Parent::new(p_value, child);
+                parent
+            });
+
+            assert_eq!(Nr::strong_count(&result), 1);
+            assert_eq!(Nr::weak_count(&result), 1);
+            assert_eq!(Nr::strong_count(result.child()), 1);
+            assert_eq!(Nr::weak_count(result.child()), 0);
+            assert_eq!(Nw::strong_count(result.child().parent()), 1);
+            assert_eq!(Nw::weak_count(result.child().parent()), 1);
+            assert_eq!(*result.child().parent(), Nr::downgrade(&result));
+        });
+    }
 }
 
 #[test]
 fn downgrade() {
     with_normal();
     with_double();
-    with_cyclic();
+    with_self_cycle();
+    with_parent_and_child_cycle();
 
     fn with_normal() {
         DropTracer::test_drop(|tracer| {
@@ -68,9 +97,31 @@ fn downgrade() {
         });
     }
 
-    fn with_cyclic() {
+    fn with_self_cycle() {
         DropTracer::test_drop(|tracer| {
-            let target = Nr::new_cyclic(|w| Cyclic::new(tracer.new_item(), w));
+            let target = Nr::new_cyclic(|w| {
+                let value = tracer.new_item();
+                Cyclic::new(value, w)
+            });
+
+            let result = Nr::downgrade(&target);
+
+            assert_eq!(Nr::strong_count(&target), 1);
+            assert_eq!(Nw::strong_count(&result), 1);
+            assert_eq!(Nr::weak_count(&target), 2);
+            assert_eq!(Nw::weak_count(&result), 2);
+        });
+    }
+
+    fn with_parent_and_child_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let target = Nr::new_cyclic(|w| {
+                let c_value = tracer.new_item();
+                let p_value = tracer.new_item();
+                let child = Nr::new(Child::new(c_value, w.clone()));
+                let parent = Parent::new(p_value, child);
+                parent
+            });
 
             let result = Nr::downgrade(&target);
 
@@ -100,7 +151,8 @@ fn clone() {
 fn drop() {
     with_weak();
     with_strong();
-    with_cyclic();
+    with_self_cycle();
+    with_parent_and_child_cycle();
 
     fn with_strong() {
         DropTracer::test_drop(|tracer| {
@@ -117,25 +169,47 @@ fn drop() {
     fn with_weak() {
         DropTracer::test_drop(|tracer| {
             let target = Nr::new(tracer.new_item());
-            let nw = Nr::downgrade(&target);
+            let weak = Nr::downgrade(&target);
 
             std::mem::drop(target);
 
-            assert_eq!(Nw::strong_count(&nw), 0);
-            assert_eq!(Nw::weak_count(&nw), 0);
+            assert_eq!(Nw::strong_count(&weak), 0);
+            assert_eq!(Nw::weak_count(&weak), 0);
         });
     }
 
-    fn with_cyclic() {
+    fn with_self_cycle() {
         DropTracer::test_drop(|tracer| {
-            let create = |w: &_| Cyclic::new(tracer.new_item(), w);
-            let target = Nr::new_cyclic(create);
-            let nw = Nr::downgrade(&target);
+            let target = Nr::new_cyclic(|w| {
+                let value = tracer.new_item();
+                Cyclic::new(value, w)
+            });
+
+            let viewer = Nr::downgrade(&target);
 
             std::mem::drop(target);
 
-            assert_eq!(Nw::weak_count(&nw), 0);
-            assert_eq!(Nw::strong_count(&nw), 0);
+            assert_eq!(Nw::weak_count(&viewer), 0);
+            assert_eq!(Nw::strong_count(&viewer), 0);
+        });
+    }
+
+    fn with_parent_and_child_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let target = Nr::new_cyclic(|w| {
+                let c_value = tracer.new_item();
+                let p_value = tracer.new_item();
+                let child = Nr::new(Child::new(c_value, w.clone()));
+                let parent = Parent::new(p_value, child);
+                parent
+            });
+
+            let viewer = Nr::downgrade(&target);
+
+            std::mem::drop(target);
+
+            assert_eq!(Nw::weak_count(&viewer), 0);
+            assert_eq!(Nw::strong_count(&viewer), 0);
         });
     }
 }
