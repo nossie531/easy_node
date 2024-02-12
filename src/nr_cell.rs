@@ -9,8 +9,9 @@ use std::ops::Deref;
 /// Base object type.
 type Base<T> = Nr<RefCell<T>>;
 
-/// Strong node reference with dynamic borrow checker.
+/// Strong reference to cell node.
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct NrCell<T: ?Sized>(Base<T>);
 
 impl<T> NrCell<T> {
@@ -30,20 +31,32 @@ impl<T> NrCell<T> {
 }
 
 impl<T: ?Sized> NrCell<T> {
-    /// Create weak reference of this node.
+    /// Create weak pointer to this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> NwCell<T> {
         NwCell(Base::downgrade(&this.0))
     }
 
-    /// Get the number of strong reference of this node.
+    /// Get the number of strong pointer to this node.
     pub fn strong_count(this: &Self) -> usize {
         Base::strong_count(&this.0)
     }
 
-    /// Get the number of weak reference of this node.
+    /// Get the number of weak pointer to this node.
     pub fn weak_count(this: &Self) -> usize {
         Base::weak_count(&this.0)
+    }
+
+    /// Create instance from base object.
+    #[inline(always)]
+    pub(crate) fn from_base(base: Base<T>) -> Self {
+        Self(base)
+    }
+
+    /// Create reference from base object reference.
+    #[inline(always)]
+    pub(crate) fn as_self(base: &Base<T>) -> &Self {
+        unsafe { std::mem::transmute(base) }
     }
 }
 

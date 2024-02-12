@@ -8,16 +8,17 @@ use std::hash::{Hash, Hasher};
 /// Base object type.
 type Base<T> = Nw<RefCell<T>>;
 
-/// Weak node reference with dynamic borrow checker.
+/// Weak reference to cell node.
 #[derive(Debug)]
 pub struct NwCell<T: ?Sized>(pub(crate) Base<T>);
 
 impl<T> NwCell<T> {
     /// Create new instance.
     ///
-    /// Calling [`upgrade`] on the return value always gives [`None`].
+    /// Calling [`upgrade`] and [`upgrade_ref`] on the return value always gives [`None`].
     ///
-    /// [`upgrade`]: NwCell::upgrade
+    /// [`upgrade`]: Self::upgrade
+    /// [`upgrade_ref`]: Self::upgrade_ref
     #[must_use]
     pub fn new() -> Self {
         Self(Nw::new())
@@ -25,21 +26,29 @@ impl<T> NwCell<T> {
 }
 
 impl<T: ?Sized> NwCell<T> {
-    /// Get strong reference of this node.
+    /// Create strong pointer to this node.
     ///
     /// Returns [`None`] if the inner value has since been dropped.
     #[must_use]
-    pub fn upgrade(&self) -> Option<&NrCell<T>> {
-        self.0.upgrade().map(|x| unsafe { std::mem::transmute(x) })
+    pub fn upgrade(&self) -> Option<NrCell<T>> {
+        self.0.upgrade().map(NrCell::from_base)
     }
 
-    /// Get the number of strong reference of this node.
+    /// Get the reference of strong pointer to this node.
+    ///
+    /// Returns [`None`] if the inner value has since been dropped.
+    #[must_use]
+    pub fn upgrade_ref(&self) -> Option<&NrCell<T>> {
+        self.0.upgrade_ref().map(NrCell::as_self)
+    }
+
+    /// Get the number of strong pointer to this node.
     #[must_use]
     pub fn strong_count(&self) -> usize {
         self.0.strong_count()
     }
 
-    /// Get the number of weak reference of this node.
+    /// Get the number of weak pointer to this node.
     #[must_use]
     pub fn weak_count(&self) -> usize {
         self.0.weak_count()

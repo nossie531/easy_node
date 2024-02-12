@@ -22,13 +22,14 @@ This allows smart pointers to be used as [`HashSet`] values, etc.
 For example, comparison of [`Nr::eq`] is based on identity of node address.<br/>
 On the other hand comparison of [`Rc::eq`] is based on inner value.
 
-## Point2 - Upgrade from weak reference
+## Point2 - Upgrade from weak pointer
 
-This crate weak reference upgrade returns strong reference location.<br/>
+This crate weak pointer supports upgrade to strong pointer reference.<br/>
 This allows smart pointers act as dynamic object directly.
 
-For example, [`Nw::upgrade`] returns [`Nr`] location.<br/>
-On the other hand [`Weak::upgrade`] returns [`Rc`] itself.
+For example, [`Nw::upgrade_ref`] returns [`Nr`] reference.<br/>
+On the other hand [`Nw::upgrade`] returns [`Nr`] itself.<br/>
+This is semilar to [`Weak::upgrade`] that returns [`Rc`] itself.
 
 [`Rc`]: std::rc::Rc
 [`Rc::eq`]: std::rc::Rc::eq

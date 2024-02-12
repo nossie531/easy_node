@@ -48,7 +48,7 @@ fn upgrade() {
 
             let result = target.upgrade();
 
-            assert_eq!(result, Some(&nr));
+            assert_eq!(result, Some(nr));
         });
     }
 
@@ -60,6 +60,92 @@ fn upgrade() {
 
             let result1 = target1.upgrade();
             let result2 = target2.upgrade();
+
+            assert_eq!(result1, Some(nr.clone()));
+            assert_eq!(result2, Some(nr.clone()));
+        });
+    }
+
+    fn with_self_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new_cyclic(|w| {
+                let value = tracer.new_item();
+                CyclicCell::new(value, w)
+            });
+
+            let target = NrCell::downgrade(&nr);
+
+            let result = target.upgrade();
+
+            assert_eq!(result, Some(nr));
+        });
+    }
+
+    fn with_parent_and_child_cycle() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new_cyclic(|w| {
+                let c_value = tracer.new_item();
+                let p_value = tracer.new_item();
+                let child = NrCell::new(ChildCell::new(c_value, w.clone()));
+                let parent = ParentCell::new(p_value, child);
+                parent
+            });
+
+            let target = NrCell::downgrade(&nr);
+
+            let result = target.upgrade_ref();
+
+            assert_eq!(result, Some(&nr));
+        });
+    }
+}
+
+#[test]
+fn upgrade_ref() {
+    with_empty();
+    with_droped();
+    with_single();
+    with_double();
+    with_self_cycle();
+    with_parent_and_child_cycle();
+
+    fn with_empty() {
+        let target = NwCell::<()>::new();
+        let result = target.upgrade_ref();
+        assert_eq!(result, None);
+    }
+
+    fn with_droped() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new(tracer.new_item());
+            let target = NrCell::downgrade(&nr);
+            std::mem::drop(nr);
+
+            let result = target.upgrade_ref();
+
+            assert_eq!(result, None);
+        });
+    }
+
+    fn with_single() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new(tracer.new_item());
+            let target = NrCell::downgrade(&nr);
+
+            let result = target.upgrade_ref();
+
+            assert_eq!(result, Some(&nr));
+        });
+    }
+
+    fn with_double() {
+        DropTracer::test_drop(|tracer| {
+            let nr = NrCell::new(tracer.new_item());
+            let target1 = NrCell::downgrade(&nr);
+            let target2 = NrCell::downgrade(&nr);
+
+            let result1 = target1.upgrade_ref();
+            let result2 = target2.upgrade_ref();
 
             assert_eq!(result1, Some(&nr));
             assert_eq!(result2, Some(&nr));
@@ -75,7 +161,7 @@ fn upgrade() {
 
             let target = NrCell::downgrade(&nr);
 
-            let result = target.upgrade();
+            let result = target.upgrade_ref();
 
             assert_eq!(result, Some(&nr));
         });
@@ -93,7 +179,7 @@ fn upgrade() {
 
             let target = NrCell::downgrade(&nr);
 
-            let result = target.upgrade();
+            let result = target.upgrade_ref();
 
             assert_eq!(result, Some(&nr));
         });

@@ -8,7 +8,7 @@ use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::rc::{Rc, Weak};
 
-/// Strong node reference.
+/// Strong reference to node.
 #[derive(Debug)]
 pub struct Nr<T: ?Sized> {
     /// Base object.
@@ -44,7 +44,7 @@ impl<T> Nr<T> {
 }
 
 impl<T: ?Sized> Nr<T> {
-    /// Create weak reference of this node.
+    /// Create weak pointer to this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> Nw<T> {
         if Nr::weak_count(this) == 0 {
@@ -54,19 +54,20 @@ impl<T: ?Sized> Nr<T> {
         Nw::from_base(Rc::downgrade(&this.base))
     }
 
-    /// Get the number of strong reference of this node.
+    /// Get the number of strong pointer to this node.
     pub fn strong_count(this: &Self) -> usize {
         let self_ref_count = if this.base.has_self_ref() { 1 } else { 0 };
         Rc::strong_count(&this.base) - self_ref_count
     }
 
-    /// Get the number of weak reference of this node.
+    /// Get the number of weak pointer to this node.
     pub fn weak_count(this: &Self) -> usize {
         Rc::weak_count(&this.base)
     }
 
     /// Create instance from base object.
-    fn from_base(base: Rc<Node<T>>) -> Self {
+    #[inline(always)]
+    pub(crate) fn from_base(base: Rc<Node<T>>) -> Self {
         Self {
             base,
             for_self_ref: false,
