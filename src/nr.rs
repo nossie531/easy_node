@@ -32,8 +32,8 @@ impl<T> Nr<T> {
 impl<T: ?Sized> Nr<T> {
     /// Get base pointer.
     #[inline(always)]
-    pub fn bp(&self) -> &Rc<T> {
-        &self.0
+    pub fn bp(this: &Self) -> &Rc<T> {
+        &this.0
     }
 
     /// Create weak pointer to this node.

@@ -37,8 +37,8 @@ impl<T> NrCell<T> {
 impl<T: ?Sized> NrCell<T> {
     /// Get base pointer.
     #[inline]
-    pub fn bp(&self) -> &Rc<RefCell<T>> {
-        self.0.bp()
+    pub fn bp(this: &Self) -> &Rc<RefCell<T>> {
+        Nr::bp(&this.0)
     }
 
     /// Create weak pointer to this node.
