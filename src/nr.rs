@@ -1,6 +1,6 @@
 //! Provider of [`Nr`].
 
-use crate::node::Node;
+use crate::util::cmp_ptr;
 use crate::Nw;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
@@ -9,20 +9,13 @@ use std::ops::Deref;
 use std::rc::{Rc, Weak};
 
 /// Strong reference to node.
-#[derive(Debug)]
-pub struct Nr<T: ?Sized> {
-    /// Base object.
-    base: Rc<Node<T>>,
-
-    /// For Self-referencing.
-    for_self_ref: bool,
-}
+#[derive(Debug, Default)]
+pub struct Nr<T: ?Sized>(Rc<T>);
 
 impl<T> Nr<T> {
     /// Create new instance.
     pub fn new(value: T) -> Self {
-        let base = Rc::new(Node::new(value));
-        Self::from_base(base)
+        Self(Rc::new(value))
     }
 
     /// Create self-referencing instance.
@@ -31,63 +24,44 @@ impl<T> Nr<T> {
         F: FnOnce(&Nw<T>) -> T,
     {
         let conv_arg = |w: &_| Nw::from_base(Weak::clone(w));
-        let base = Rc::new_cyclic(|w| Node::new(data_fn(&conv_arg(w))));
-        let weak_saved = Rc::weak_count(&base) > 0;
-        let result = Self::from_base(base);
-
-        if weak_saved {
-            Nr::set_self_ref(&result);
-        }
-
-        result
+        let base = Rc::new_cyclic(|w| data_fn(&conv_arg(w)));
+        Self(base)
     }
 }
 
 impl<T: ?Sized> Nr<T> {
+    /// Get base pointer.
+    #[inline(always)]
+    pub fn bp(&self) -> &Rc<T> {
+        &self.0
+    }
+
     /// Create weak pointer to this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> Nw<T> {
-        if Nr::weak_count(this) == 0 {
-            Nr::set_self_ref(this);
-        }
-
-        Nw::from_base(Rc::downgrade(&this.base))
+        Nw::from_base(Rc::downgrade(&this.0))
     }
 
     /// Get the number of strong pointer to this node.
     pub fn strong_count(this: &Self) -> usize {
-        let self_ref_count = if this.base.has_self_ref() { 1 } else { 0 };
-        Rc::strong_count(&this.base) - self_ref_count
+        Rc::strong_count(&this.0)
     }
 
     /// Get the number of weak pointer to this node.
     pub fn weak_count(this: &Self) -> usize {
-        Rc::weak_count(&this.base)
+        Rc::weak_count(&this.0)
     }
 
     /// Create instance from base object.
     #[inline(always)]
-    pub(crate) fn from_base(base: Rc<Node<T>>) -> Self {
-        Self {
-            base,
-            for_self_ref: false,
-        }
-    }
-
-    /// Set self-reference.
-    fn set_self_ref(this: &Self) {
-        let mut self_ref = this.clone();
-        self_ref.for_self_ref = true;
-        this.base.set_self_ref(self_ref);
+    pub(crate) fn from_base(base: Rc<T>) -> Self {
+        Self(base)
     }
 }
 
 impl<T: ?Sized> Clone for Nr<T> {
     fn clone(&self) -> Self {
-        Self {
-            base: Rc::clone(&self.base),
-            for_self_ref: self.for_self_ref,
-        }
+        Self(Rc::clone(&self.0))
     }
 }
 
@@ -95,31 +69,13 @@ impl<T: ?Sized> Deref for Nr<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
-        self.base.value()
-    }
-}
-
-impl<T: ?Sized> Drop for Nr<T> {
-    fn drop(&mut self) {
-        if self.for_self_ref {
-            return;
-        }
-
-        if Self::strong_count(self) <= 1 {
-            self.base.drop_self_ref();
-        }
-    }
-}
-
-impl<T: Default> Default for Nr<T> {
-    fn default() -> Self {
-        Self::new(Default::default())
+        self.0.deref()
     }
 }
 
 impl<T: ?Sized + Display> Display for Nr<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        Display::fmt(&**self, f)
+        self.0.fmt(f)
     }
 }
 
@@ -127,19 +83,19 @@ impl<T: ?Sized> Eq for Nr<T> {}
 
 impl<T: ?Sized> Hash for Nr<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        Rc::as_ptr(&self.base).hash(state);
+        Rc::as_ptr(&self.0).hash(state);
     }
 }
 
 impl<T: ?Sized> Ord for Nr<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        Rc::as_ptr(&self.base).cmp(&Rc::as_ptr(&other.base))
+        cmp_ptr(Rc::as_ptr(&self.0), Rc::as_ptr(&other.0))
     }
 }
 
 impl<T: ?Sized> PartialEq for Nr<T> {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.base, &other.base)
+        Rc::ptr_eq(&self.0, &other.0)
     }
 }
 

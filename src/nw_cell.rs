@@ -4,42 +4,40 @@ use crate::{NrCell, Nw};
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
+use std::rc::Weak;
 
 /// Base object type.
 type Base<T> = Nw<RefCell<T>>;
 
 /// Weak reference to cell node.
-#[derive(Debug)]
-pub struct NwCell<T: ?Sized>(pub(crate) Base<T>);
+#[derive(Debug, Default)]
+pub struct NwCell<T: ?Sized>(Base<T>);
 
 impl<T> NwCell<T> {
     /// Create new instance.
     ///
-    /// Calling [`upgrade`] and [`upgrade_ref`] on the return value always gives [`None`].
+    /// Calling [`upgrade`] on the return value always gives [`None`].
     ///
     /// [`upgrade`]: Self::upgrade
-    /// [`upgrade_ref`]: Self::upgrade_ref
     #[must_use]
     pub fn new() -> Self {
-        Self(Nw::new())
+        Self(Base::new())
     }
 }
 
 impl<T: ?Sized> NwCell<T> {
+    /// Get base pointer.
+    #[inline]
+    pub fn bp(&self) -> &Weak<RefCell<T>> {
+        self.0.bp()
+    }
+
     /// Create strong pointer to this node.
     ///
     /// Returns [`None`] if the inner value has since been dropped.
     #[must_use]
     pub fn upgrade(&self) -> Option<NrCell<T>> {
         self.0.upgrade().map(NrCell::from_base)
-    }
-
-    /// Get the reference of strong pointer to this node.
-    ///
-    /// Returns [`None`] if the inner value has since been dropped.
-    #[must_use]
-    pub fn upgrade_ref(&self) -> Option<&NrCell<T>> {
-        self.0.upgrade_ref().map(NrCell::as_self)
     }
 
     /// Get the number of strong pointer to this node.
@@ -53,17 +51,17 @@ impl<T: ?Sized> NwCell<T> {
     pub fn weak_count(&self) -> usize {
         self.0.weak_count()
     }
+
+    /// Create instance from base object.
+    #[inline(always)]
+    pub(crate) fn from_base(base: Base<T>) -> Self {
+        Self(base)
+    }
 }
 
 impl<T: ?Sized> Clone for NwCell<T> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
-    }
-}
-
-impl<T> Default for NwCell<T> {
-    fn default() -> Self {
-        Self(Base::default())
     }
 }
 

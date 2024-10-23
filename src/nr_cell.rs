@@ -1,17 +1,18 @@
 //! Provider of [`NrCell`].
 
-use crate::{nw_cell::NwCell, Nr, Nw};
+use crate::nw_cell::NwCell;
+use crate::{Nr, Nw};
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
+use std::rc::Rc;
 
 /// Base object type.
 type Base<T> = Nr<RefCell<T>>;
 
 /// Strong reference to cell node.
-#[derive(Debug)]
-#[repr(transparent)]
+#[derive(Debug, Default)]
 pub struct NrCell<T: ?Sized>(Base<T>);
 
 impl<T> NrCell<T> {
@@ -25,16 +26,25 @@ impl<T> NrCell<T> {
     where
         F: FnOnce(&NwCell<T>) -> T,
     {
-        let data_fn = |w: &_| RefCell::new(data_fn(&NwCell(Nw::clone(w))));
-        Self(Base::new_cyclic(data_fn))
+        let conv_ret = RefCell::new;
+        let conv_arg = |w: &_| NwCell::from_base(Nw::clone(w));
+        let data_fn = |w: &_| conv_ret(data_fn(&conv_arg(w)));
+        let base = Base::new_cyclic(data_fn);
+        Self(base)
     }
 }
 
 impl<T: ?Sized> NrCell<T> {
+    /// Get base pointer.
+    #[inline]
+    pub fn bp(&self) -> &Rc<RefCell<T>> {
+        self.0.bp()
+    }
+
     /// Create weak pointer to this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> NwCell<T> {
-        NwCell(Base::downgrade(&this.0))
+        NwCell::from_base(Nr::downgrade(&this.0))
     }
 
     /// Get the number of strong pointer to this node.
@@ -52,12 +62,6 @@ impl<T: ?Sized> NrCell<T> {
     pub(crate) fn from_base(base: Base<T>) -> Self {
         Self(base)
     }
-
-    /// Create reference from base object reference.
-    #[inline(always)]
-    pub(crate) fn as_self(base: &Base<T>) -> &Self {
-        unsafe { std::mem::transmute(base) }
-    }
 }
 
 impl<T: ?Sized> Clone for NrCell<T> {
@@ -71,12 +75,6 @@ impl<T: ?Sized> Deref for NrCell<T> {
 
     fn deref(&self) -> &Self::Target {
         self.0.deref()
-    }
-}
-
-impl<T: Default> Default for NrCell<T> {
-    fn default() -> Self {
-        Self(Base::default())
     }
 }
 

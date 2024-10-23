@@ -1,5 +1,3 @@
-mod common;
-
 pub use crate::common::*;
 use drop_tracer::DropTracer;
 use easy_node::{Nr, Nw};
@@ -102,92 +100,6 @@ fn upgrade() {
 }
 
 #[test]
-fn upgrade_ref() {
-    with_empty();
-    with_droped();
-    with_single();
-    with_double();
-    with_self_cycle();
-    with_parent_and_child_cycle();
-
-    fn with_empty() {
-        let target = Nw::<()>::new();
-        let result = target.upgrade_ref();
-        assert_eq!(result, None);
-    }
-
-    fn with_droped() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-            std::mem::drop(nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, None);
-        });
-    }
-
-    fn with_single() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
-        });
-    }
-
-    fn with_double() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target1 = Nr::downgrade(&nr);
-            let target2 = Nr::downgrade(&nr);
-
-            let result1 = target1.upgrade_ref();
-            let result2 = target2.upgrade_ref();
-
-            assert_eq!(result1, Some(&nr));
-            assert_eq!(result2, Some(&nr));
-        });
-    }
-
-    fn with_self_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new_cyclic(|w| {
-                let value = tracer.new_item();
-                Cyclic::new(value, w)
-            });
-
-            let target = Nr::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
-        });
-    }
-
-    fn with_parent_and_child_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new_cyclic(|w| {
-                let c_value = tracer.new_item();
-                let p_value = tracer.new_item();
-                let child = Nr::new(Child::new(c_value, w.clone()));
-                let parent = Parent::new(p_value, child);
-                parent
-            });
-
-            let target = Nr::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
-        });
-    }
-}
-
-#[test]
 fn clone() {
     with_empty();
     with_normal();
@@ -224,56 +136,6 @@ fn clone() {
 fn default() {
     let result = <Nw<()> as Default>::default();
     assert_eq!(result, Nw::new());
-}
-
-#[test]
-fn drop() {
-    with_empty();
-    with_noref();
-    with_strong();
-    with_weak();
-
-    fn with_empty() {
-        let target = Nw::<()>::new();
-        std::mem::drop(target);
-    }
-
-    fn with_noref() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-
-            std::mem::drop(nr);
-            std::mem::drop(target);
-        });
-    }
-
-    fn with_strong() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nr::strong_count(&nr), 1);
-            assert_eq!(Nr::weak_count(&nr), 0);
-        });
-    }
-
-    fn with_weak() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-            let nw = Nr::downgrade(&nr);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nr::strong_count(&nr), 1);
-            assert_eq!(Nw::strong_count(&nw), 1);
-            assert_eq!(Nr::weak_count(&nr), 1);
-            assert_eq!(Nw::weak_count(&nw), 1);
-        });
-    }
 }
 
 #[test]

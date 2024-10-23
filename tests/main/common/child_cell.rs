@@ -1,4 +1,4 @@
-use crate::ParentCell;
+use crate::common::ParentCell;
 use easy_node::NwCell;
 
 #[derive(Debug)]

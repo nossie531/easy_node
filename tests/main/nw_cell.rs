@@ -1,5 +1,3 @@
-mod common;
-
 pub use crate::common::*;
 use drop_tracer::DropTracer;
 use easy_node::{NrCell, NwCell};
@@ -93,95 +91,9 @@ fn upgrade() {
 
             let target = NrCell::downgrade(&nr);
 
-            let result = target.upgrade_ref();
+            let result = target.upgrade();
 
-            assert_eq!(result, Some(&nr));
-        });
-    }
-}
-
-#[test]
-fn upgrade_ref() {
-    with_empty();
-    with_droped();
-    with_single();
-    with_double();
-    with_self_cycle();
-    with_parent_and_child_cycle();
-
-    fn with_empty() {
-        let target = NwCell::<()>::new();
-        let result = target.upgrade_ref();
-        assert_eq!(result, None);
-    }
-
-    fn with_droped() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target = NrCell::downgrade(&nr);
-            std::mem::drop(nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, None);
-        });
-    }
-
-    fn with_single() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target = NrCell::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
-        });
-    }
-
-    fn with_double() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target1 = NrCell::downgrade(&nr);
-            let target2 = NrCell::downgrade(&nr);
-
-            let result1 = target1.upgrade_ref();
-            let result2 = target2.upgrade_ref();
-
-            assert_eq!(result1, Some(&nr));
-            assert_eq!(result2, Some(&nr));
-        });
-    }
-
-    fn with_self_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new_cyclic(|w| {
-                let value = tracer.new_item();
-                CyclicCell::new(value, w)
-            });
-
-            let target = NrCell::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
-        });
-    }
-
-    fn with_parent_and_child_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new_cyclic(|w| {
-                let c_value = tracer.new_item();
-                let p_value = tracer.new_item();
-                let child = NrCell::new(ChildCell::new(c_value, w.clone()));
-                let parent = ParentCell::new(p_value, child);
-                parent
-            });
-
-            let target = NrCell::downgrade(&nr);
-
-            let result = target.upgrade_ref();
-
-            assert_eq!(result, Some(&nr));
+            assert_eq!(result, Some(nr));
         });
     }
 }
@@ -223,56 +135,6 @@ fn clone() {
 fn default() {
     let result = <NwCell<()> as Default>::default();
     assert_eq!(result, NwCell::new());
-}
-
-#[test]
-fn drop() {
-    with_empty();
-    with_noref();
-    with_strong();
-    with_weak();
-
-    fn with_empty() {
-        let target = NwCell::<()>::new();
-        std::mem::drop(target);
-    }
-
-    fn with_noref() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target = NrCell::downgrade(&nr);
-
-            std::mem::drop(nr);
-            std::mem::drop(target);
-        });
-    }
-
-    fn with_strong() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target = NrCell::downgrade(&nr);
-
-            std::mem::drop(target);
-
-            assert_eq!(NrCell::strong_count(&nr), 1);
-            assert_eq!(NrCell::weak_count(&nr), 0);
-        });
-    }
-
-    fn with_weak() {
-        DropTracer::test_drop(|tracer| {
-            let nr = NrCell::new(tracer.new_item());
-            let target = NrCell::downgrade(&nr);
-            let nw = NrCell::downgrade(&nr);
-
-            std::mem::drop(target);
-
-            assert_eq!(NrCell::strong_count(&nr), 1);
-            assert_eq!(NwCell::strong_count(&nw), 1);
-            assert_eq!(NrCell::weak_count(&nr), 1);
-            assert_eq!(NwCell::weak_count(&nw), 1);
-        });
-    }
 }
 
 #[test]

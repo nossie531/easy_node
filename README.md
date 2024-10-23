@@ -17,15 +17,10 @@ managing graph data structures.
 * `NwCell` - newtype of `Nw<RefCell<T>>`.
 
 These smart pointers behavior is similar to `Rc` and `Weak`.<br/>
-However, there are several important differences between them.<br/>
-
-* This crate smart pointer comparison is based on location.
-* This crate weak pointer supports upgrade to strong pointer reference.
-
-See the API documentation for details.
+However, These smart pointer comparison is based on location.
 
 ## What's New?
 
-v0.2.0
-
-* Rename `upgrade` to `upgrade_ref` and support `upgrade` like `Weak`.
+v0.3.0
+* Obsolete `upgrade_ref` method (Because of unsafe misusing...).
+* Add `bp` method (Get base smart pointer).

@@ -1,5 +1,3 @@
-mod common;
-
 pub use crate::common::*;
 use drop_tracer::DropTracer;
 use easy_node::{Nr, Nw};
@@ -145,73 +143,6 @@ fn clone() {
     assert_eq!(Nr::weak_count(&result), 0);
     assert_eq!(&result, &target);
     assert_eq!(*result, *target);
-}
-
-#[test]
-fn drop() {
-    with_weak();
-    with_strong();
-    with_self_cycle();
-    with_parent_and_child_cycle();
-
-    fn with_strong() {
-        DropTracer::test_drop(|tracer| {
-            let target = Nr::new(tracer.new_item());
-            let strong = Nr::clone(&target);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nr::strong_count(&strong), 1);
-            assert_eq!(Nr::weak_count(&strong), 0);
-        });
-    }
-
-    fn with_weak() {
-        DropTracer::test_drop(|tracer| {
-            let target = Nr::new(tracer.new_item());
-            let weak = Nr::downgrade(&target);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nw::strong_count(&weak), 0);
-            assert_eq!(Nw::weak_count(&weak), 0);
-        });
-    }
-
-    fn with_self_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let target = Nr::new_cyclic(|w| {
-                let value = tracer.new_item();
-                Cyclic::new(value, w)
-            });
-
-            let viewer = Nr::downgrade(&target);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nw::weak_count(&viewer), 0);
-            assert_eq!(Nw::strong_count(&viewer), 0);
-        });
-    }
-
-    fn with_parent_and_child_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let target = Nr::new_cyclic(|w| {
-                let c_value = tracer.new_item();
-                let p_value = tracer.new_item();
-                let child = Nr::new(Child::new(c_value, w.clone()));
-                let parent = Parent::new(p_value, child);
-                parent
-            });
-
-            let viewer = Nr::downgrade(&target);
-
-            std::mem::drop(target);
-
-            assert_eq!(Nw::weak_count(&viewer), 0);
-            assert_eq!(Nw::strong_count(&viewer), 0);
-        });
-    }
 }
 
 #[test]

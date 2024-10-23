@@ -12,9 +12,9 @@ managing graph data structures.
 * [`NwCell`] - newtype of [`Nw<RefCell<T>>`](Nw).
 
 These smart pointers behavior is similar to [`Rc`] and [`Weak`].<br/>
-However, there are several important differences between them.
+However, These smart pointer comparison is based on location.
 
-## Point1 - Comparison of smart pointers
+## Comparison of smart pointers
 
 This crate smart pointer comparison is based on location.<br/>
 This allows smart pointers to be used as [`HashSet`] values, etc.
@@ -22,27 +22,19 @@ This allows smart pointers to be used as [`HashSet`] values, etc.
 For example, comparison of [`Nr::eq`] is based on identity of node address.<br/>
 On the other hand comparison of [`Rc::eq`] is based on inner value.
 
-## Point2 - Upgrade from weak pointer
-
-This crate weak pointer supports upgrade to strong pointer reference.<br/>
-This allows smart pointers act as dynamic object directly.
-
-For example, [`Nw::upgrade_ref`] returns [`Nr`] reference.<br/>
-On the other hand [`Nw::upgrade`] returns [`Nr`] itself.<br/>
-This is semilar to [`Weak::upgrade`] that returns [`Rc`] itself.
-
 [`Rc`]: std::rc::Rc
 [`Rc::eq`]: std::rc::Rc::eq
 [`Weak`]: std::rc::Weak
-[`Weak::upgrade`]: std::rc::Weak::upgrade
 [`HashSet`]: std::collections::HashSet
 */
 
-mod node;
+#![warn(missing_docs)]
+
 mod nr;
 mod nr_cell;
 mod nw;
 mod nw_cell;
+mod util;
 
 pub use nr::*;
 pub use nr_cell::*;
