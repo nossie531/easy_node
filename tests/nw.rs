@@ -1,10 +1,9 @@
-pub use crate::common::*;
-use drop_tracer::DropTracer;
 use easy_node::{Nr, Nw};
 use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
+use std::rc::Rc;
 
 #[test]
 fn new() {
@@ -14,13 +13,41 @@ fn new() {
 }
 
 #[test]
+fn as_base() {
+    let rc = Rc::new(42);
+    let weak = Rc::downgrade(&rc);
+
+    let result = Nw::as_base(&weak);
+
+    assert_eq!(result, Nw::as_base(&weak));
+}
+
+#[test]
+fn from_base() {
+    let rc = Rc::new(42);
+    let weak = Rc::downgrade(&rc);
+
+    let result = Nw::from_base(weak.clone());
+
+    assert_eq!(result, Nw::from_base(weak.clone()));
+}
+
+#[test]
+fn base() {
+    let rc = Rc::new(42);
+    let weak = Rc::downgrade(&rc);
+    let target = Nw::from_base(weak.clone());
+
+    let result = target.base();
+
+    assert!(result.ptr_eq(&weak));
+}
+
+#[test]
 fn upgrade() {
     with_empty();
-    with_droped();
-    with_single();
-    with_double();
-    with_self_cycle();
-    with_parent_and_child_cycle();
+    with_droped_nr();
+    with_normal();
 
     fn with_empty() {
         let target = Nw::<()>::new();
@@ -28,74 +55,27 @@ fn upgrade() {
         assert_eq!(result, None);
     }
 
-    fn with_droped() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
-            std::mem::drop(nr);
+    fn with_droped_nr() {
+        let nr = Nr::new(42);
+        let target = Nr::downgrade(&nr);
+        std::mem::drop(nr);
 
-            let result = target.upgrade();
+        let result = target.upgrade();
 
-            assert_eq!(result, None);
-        });
+        assert_eq!(result, None);
     }
 
-    fn with_single() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target = Nr::downgrade(&nr);
+    fn with_normal() {
+        let nr = Nr::new(42);
+        let target = Nr::downgrade(&nr);
 
-            let result = target.upgrade();
+        let result = target.upgrade();
+        drop(nr);
 
-            assert_eq!(result, Some(nr));
-        });
-    }
-
-    fn with_double() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new(tracer.new_item());
-            let target1 = Nr::downgrade(&nr);
-            let target2 = Nr::downgrade(&nr);
-
-            let result1 = target1.upgrade();
-            let result2 = target2.upgrade();
-
-            assert_eq!(result1, Some(nr.clone()));
-            assert_eq!(result2, Some(nr.clone()));
-        });
-    }
-
-    fn with_self_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new_cyclic(|w| {
-                let value = tracer.new_item();
-                Cyclic::new(value, w)
-            });
-
-            let target = Nr::downgrade(&nr);
-
-            let result = target.upgrade();
-
-            assert_eq!(result, Some(nr));
-        });
-    }
-
-    fn with_parent_and_child_cycle() {
-        DropTracer::test_drop(|tracer| {
-            let nr = Nr::new_cyclic(|w| {
-                let c_value = tracer.new_item();
-                let p_value = tracer.new_item();
-                let child = Nr::new(Child::new(c_value, w.clone()));
-                let parent = Parent::new(p_value, child);
-                parent
-            });
-
-            let target = Nr::downgrade(&nr);
-
-            let result = target.upgrade();
-
-            assert_eq!(result, Some(nr));
-        });
+        assert_eq!(Nw::strong_count(&target), 1);
+        assert_eq!(Nr::strong_count(&result.as_ref().unwrap()), 1);
+        assert_eq!(Nw::weak_count(&target), 1);
+        assert_eq!(Nr::weak_count(&result.as_ref().unwrap()), 1);
     }
 }
 

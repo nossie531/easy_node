@@ -31,12 +31,8 @@ On the other hand comparison of [`Rc::eq`] is based on inner value.
 #![warn(missing_docs)]
 
 mod nr;
-mod nr_cell;
 mod nw;
-mod nw_cell;
 mod util;
 
 pub use nr::*;
-pub use nr_cell::*;
 pub use nw::*;
-pub use nw_cell::*;

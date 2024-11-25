@@ -13,8 +13,6 @@ managing graph data structures.
 
 * `Nr` - like `Rc`
 * `Nw` - like `Weak`.
-* `NrCell` - newtype of `Nr<RefCell<T>>`.
-* `NwCell` - newtype of `Nw<RefCell<T>>`.
 
 These smart pointers behavior is similar to `Rc` and `Weak`.<br/>
 However, These smart pointer comparison is based on location.
@@ -22,5 +20,6 @@ However, These smart pointer comparison is based on location.
 ## What's New?
 
 v0.3.0
-* Obsolete `upgrade_ref` method (Because of unsafe misusing...).
-* Add `bp` method (Get base smart pointer).
+* Obsolete `upgrade_ref` method (unsafe misusing...).
+* Obsolete `NrCell` and `NwCell` (not essential...).
+* Add `base`, `as_base`, `from_base` method.

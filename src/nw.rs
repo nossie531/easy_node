@@ -4,9 +4,11 @@ use crate::util::cmp_ptr;
 use crate::Nr;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
+use std::mem;
 use std::rc::Weak;
 
 /// Weak reference to node.
+#[repr(transparent)]
 #[derive(Debug, Default)]
 pub struct Nw<T: ?Sized>(Weak<T>);
 
@@ -23,9 +25,24 @@ impl<T> Nw<T> {
 }
 
 impl<T: ?Sized> Nw<T> {
-    /// Get base pointer.
+    /// Create reference from base object.
+    #[must_use]
     #[inline(always)]
-    pub fn bp(&self) -> &Weak<T> {
+    pub fn as_base(base: &Weak<T>) -> &Self {
+        unsafe { mem::transmute(base) }
+    }
+
+    /// Create instance from base object.
+    #[must_use]
+    #[inline(always)]
+    pub fn from_base(base: Weak<T>) -> Self {
+        Self(base)
+    }
+
+    /// Get base object.
+    #[must_use]
+    #[inline(always)]
+    pub fn base(&self) -> &Weak<T> {
         &self.0
     }
 
@@ -39,20 +56,16 @@ impl<T: ?Sized> Nw<T> {
 
     /// Get the number of strong pointer to this node.
     #[must_use]
+    #[inline(always)]
     pub fn strong_count(&self) -> usize {
         self.0.strong_count()
     }
 
     /// Get the number of weak pointer to this node.
     #[must_use]
+    #[inline(always)]
     pub fn weak_count(&self) -> usize {
         self.0.weak_count()
-    }
-
-    /// Create instance from base object.
-    #[inline(always)]
-    pub(crate) fn from_base(base: Weak<T>) -> Self {
-        Self(base)
     }
 }
 
