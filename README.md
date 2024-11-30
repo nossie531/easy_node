@@ -15,7 +15,32 @@ managing graph data structures.
 * `Nw` - like `Weak`.
 
 These smart pointers behavior is similar to `Rc` and `Weak`.<br/>
-However, These smart pointer comparison is based on location.
+However, These smart pointer comparison is location based.
+
+## Other options
+
+[`by_address`] is a great crate with similar purpose.
+
+It supports location based comparison too. But unlike this crate,
+it can target any type that implements `Deref` trait. And therefore,
+`Weak` that does not implement `Deref` need other [support][issue].
+
+On the other hand, this crate specializes on `Rc` and `Weak`. Instead,
+we discard other smart pointers like `Box`. This is because this crate
+assumes only nodes in graph or network.
+
+[`by_address`]: https://crates.io/crates/by_address
+[issue]: https://github.com/mbrubeck/by_address/issues/3
+
+## Unsize handling
+
+As of 2024, to support unsize conversions with smart pointers, unstable
+feature `CoerceUnsized` is required. So, `Rc<Type>` to `Rc<dyn Trait>`
+conversion is supported, but `Nr<Type>` to `Nr<dyn Trait>` is not.
+
+As workaround, we provide inter-conversions between `Nr` and `Rc`, and
+between `Nw` and `Weak`. `Nr` and `Nw` functions `as_base`, `from_base`,
+and `base` are them.
 
 ## What's New?
 
