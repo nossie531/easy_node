@@ -19,6 +19,10 @@ However, These smart pointer comparison is based on location.
 
 ## What's New?
 
+v0.3.1
+* Add `prelude` module.
+* Edit documentation.
+
 v0.3.0
 * Obsolete `upgrade_ref` method (unsafe misusing...).
 * Obsolete `NrCell` and `NwCell` (not essential...).
