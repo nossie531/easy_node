@@ -1,5 +1,5 @@
 use drop_tracer::DropTracer;
-use easy_node::{Nr, Nw};
+use easy_node::prelude::*;
 use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
