@@ -8,8 +8,6 @@ managing graph data structures.
 
 * [`Nr`] - like [`Rc`]
 * [`Nw`] - like [`Weak`].
-* [`NrCell`] - newtype of [`Nr<RefCell<T>>`](Nr).
-* [`NwCell`] - newtype of [`Nw<RefCell<T>>`](Nw).
 
 These smart pointers behavior is similar to [`Rc`] and [`Weak`].<br/>
 However, These smart pointer comparison is based on location.
@@ -32,6 +30,7 @@ On the other hand comparison of [`Rc::eq`] is based on inner value.
 
 mod nr;
 mod nw;
+pub mod prelude;
 mod util;
 
 pub use nr::*;
