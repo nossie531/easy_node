@@ -44,6 +44,9 @@ and `base` are them.
 
 ## What's New?
 
+v0.3.2
+* Edit documentation.
+
 v0.3.1
 * Add `prelude` module.
 * Edit documentation.
