@@ -1,4 +1,4 @@
-//! Utility.
+//! Crate's utility.
 
 use std::cmp::Ordering;
 

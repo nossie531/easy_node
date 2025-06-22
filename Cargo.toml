@@ -1,8 +1,8 @@
 [package]
 name = "easy_node"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Nossie531"]
-edition = "2021"
+edition = "2024"
 description = "Smart pointer for graph nodes."
 repository = "https://github.com/nossie531/easy_node"
 license = "MIT OR Apache-2.0"

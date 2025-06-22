@@ -1,7 +1,7 @@
 //! Provider of [`Nr`].
 
+use crate::prelude::*;
 use crate::util::cmp_ptr;
-use crate::Nw;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 use std::hash::{Hash, Hasher};
@@ -15,12 +15,12 @@ use std::rc::{Rc, Weak};
 pub struct Nr<T: ?Sized>(Rc<T>);
 
 impl<T> Nr<T> {
-    /// Create new instance.
+    /// Creates a new instance.
     pub fn new(value: T) -> Self {
         Self(Rc::new(value))
     }
 
-    /// Create self-referencing instance.
+    /// Creates self-referencing instance.
     pub fn new_cyclic<F>(data_fn: F) -> Self
     where
         F: FnOnce(&Nw<T>) -> T,
@@ -32,40 +32,40 @@ impl<T> Nr<T> {
 }
 
 impl<T: ?Sized> Nr<T> {
-    /// Create reference from base object.
+    /// Creates reference from base object.
     #[must_use]
     #[inline(always)]
     pub fn as_base(base: &Rc<T>) -> &Self {
         unsafe { mem::transmute(base) }
     }
 
-    /// Create instance from base object.
+    /// Creates instance from base object.
     #[must_use]
     #[inline(always)]
     pub fn from_base(base: Rc<T>) -> Self {
         Self(base)
     }
 
-    /// Get base object.
+    /// Returns base object.
     #[must_use]
     #[inline(always)]
     pub fn base(this: &Self) -> &Rc<T> {
         &this.0
     }
 
-    /// Create weak pointer to this node.
+    /// Creates weak pointer to this node.
     #[must_use]
     pub fn downgrade(this: &Self) -> Nw<T> {
         Nw::from_base(Rc::downgrade(&this.0))
     }
 
-    /// Get the number of strong pointer to this node.
+    /// Returns the number of strong pointer to this node.
     #[inline(always)]
     pub fn strong_count(this: &Self) -> usize {
         Rc::strong_count(&this.0)
     }
 
-    /// Get the number of weak pointer to this node.
+    /// Returns the number of weak pointer to this node.
     #[inline(always)]
     pub fn weak_count(this: &Self) -> usize {
         Rc::weak_count(&this.0)
