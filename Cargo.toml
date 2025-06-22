@@ -1,6 +1,6 @@
 [package]
 name = "easy_node"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Nossie531"]
 edition = "2024"
 description = "Smart pointer for graph nodes."
@@ -10,4 +10,4 @@ keywords = ["smart-pointer", "graph", "node"]
 categories = ["rust-patterns"]
 
 [dev-dependencies]
-drop_tracer = "0.1"
+drop_tracer = "0.2"

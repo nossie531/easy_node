@@ -1,4 +1,4 @@
-use drop_tracer::DropTracer;
+use drop_tracer::prelude::*;
 use easy_node::prelude::*;
 use std::cmp::Ordering;
 use std::collections::HashSet;

@@ -44,6 +44,9 @@ and `base` are them.
 
 ## What's New?
 
+v0.4.1
+* Update dependeny.
+
 v0.4.0
 * Rust edition is updated to 2024.
 * Polish documentations.
