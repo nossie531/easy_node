@@ -42,23 +42,6 @@ As workaround, we provide inter-conversions between `Nr` and `Rc`, and
 between `Nw` and `Weak`. `Nr` and `Nw` functions `as_base`, `from_base`,
 and `base` are them.
 
-## What's New?
+## Versions
 
-v0.4.1
-* Update dependeny.
-
-v0.4.0
-* Rust edition is updated to 2024.
-* Polish documentations.
-
-v0.3.2
-* Edit documentation.
-
-v0.3.1
-* Add `prelude` module.
-* Edit documentation.
-
-v0.3.0
-* Obsolete `upgrade_ref` method (unsafe misusing...).
-* Obsolete `NrCell` and `NwCell` (not essential...).
-* Add `base`, `as_base`, `from_base` method.
+See the [CHANGELOG](CHANGELOG.md).

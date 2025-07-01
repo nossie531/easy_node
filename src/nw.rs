@@ -27,21 +27,29 @@ impl<T> Nw<T> {
 impl<T: ?Sized> Nw<T> {
     /// Creates reference from base object.
     #[must_use]
-    #[inline(always)]
     pub fn as_base(base: &Weak<T>) -> &Self {
         unsafe { mem::transmute(base) }
     }
 
     /// Creates instance from base object.
     #[must_use]
-    #[inline(always)]
     pub fn from_base(base: Weak<T>) -> Self {
         Self(base)
     }
 
+    /// Returns a raw pointer to the data.
+    ///
+    /// The pointer is valid only if there are some strong references.
+    /// The pointer may be dangling, unaligned or even [`null`] otherwise.
+    ///
+    /// [`null`]: std::ptr::null
+    #[must_use]
+    pub fn as_ptr(&self) -> *const T {
+        Weak::as_ptr(&self.0)
+    }
+
     /// Returns base object.
     #[must_use]
-    #[inline(always)]
     pub fn base(&self) -> &Weak<T> {
         &self.0
     }
@@ -56,14 +64,12 @@ impl<T: ?Sized> Nw<T> {
 
     /// Returns the number of strong pointer to this node.
     #[must_use]
-    #[inline(always)]
     pub fn strong_count(&self) -> usize {
         self.0.strong_count()
     }
 
     /// Returns the number of weak pointer to this node.
     #[must_use]
-    #[inline(always)]
     pub fn weak_count(&self) -> usize {
         self.0.weak_count()
     }
@@ -79,13 +85,13 @@ impl<T: ?Sized> Eq for Nw<T> {}
 
 impl<T: ?Sized> Hash for Nw<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.as_ptr().hash(state);
+        self.as_ptr().hash(state);
     }
 }
 
 impl<T: ?Sized> Ord for Nw<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        cmp_ptr(self.0.as_ptr(), other.0.as_ptr())
+        cmp_ptr(self.as_ptr(), other.as_ptr())
     }
 }
 

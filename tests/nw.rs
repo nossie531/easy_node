@@ -33,6 +33,26 @@ fn from_base() {
 }
 
 #[test]
+fn as_ptr() {
+    with_normal();
+    with_dangling();
+
+    fn with_normal() {
+        let nr = Nr::new(42);
+        let target = Nr::downgrade(&nr);
+
+        let result = target.as_ptr();
+        assert_eq!(result, Nr::as_ptr(&nr));
+    }
+
+    fn with_dangling() {
+        let nr = Nr::new(42);
+        let target = Nr::downgrade(&nr);
+        let _dangling = target.as_ptr();
+    }
+}
+
+#[test]
 fn base() {
     let rc = Rc::new(42);
     let weak = Rc::downgrade(&rc);

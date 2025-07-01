@@ -34,21 +34,24 @@ impl<T> Nr<T> {
 impl<T: ?Sized> Nr<T> {
     /// Creates reference from base object.
     #[must_use]
-    #[inline(always)]
     pub fn as_base(base: &Rc<T>) -> &Self {
         unsafe { mem::transmute(base) }
     }
 
     /// Creates instance from base object.
     #[must_use]
-    #[inline(always)]
     pub fn from_base(base: Rc<T>) -> Self {
         Self(base)
     }
 
+    /// Returns a raw pointer to the data.
+    #[must_use]
+    pub fn as_ptr(this: &Self) -> *const T {
+        Rc::as_ptr(&this.0)
+    }
+
     /// Returns base object.
     #[must_use]
-    #[inline(always)]
     pub fn base(this: &Self) -> &Rc<T> {
         &this.0
     }
@@ -60,13 +63,11 @@ impl<T: ?Sized> Nr<T> {
     }
 
     /// Returns the number of strong pointer to this node.
-    #[inline(always)]
     pub fn strong_count(this: &Self) -> usize {
         Rc::strong_count(&this.0)
     }
 
     /// Returns the number of weak pointer to this node.
-    #[inline(always)]
     pub fn weak_count(this: &Self) -> usize {
         Rc::weak_count(&this.0)
     }
@@ -96,13 +97,13 @@ impl<T: ?Sized> Eq for Nr<T> {}
 
 impl<T: ?Sized> Hash for Nr<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        Rc::as_ptr(&self.0).hash(state);
+        Self::as_ptr(self).hash(state);
     }
 }
 
 impl<T: ?Sized> Ord for Nr<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        cmp_ptr(Rc::as_ptr(&self.0), Rc::as_ptr(&other.0))
+        cmp_ptr(Self::as_ptr(self), Self::as_ptr(other))
     }
 }
 

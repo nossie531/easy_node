@@ -10,7 +10,7 @@ checksum = "37f323e38f0188bceef6dca6048a6f6a3a32a58724bd3e7a5261d8e1cfabf0d2"
 
 [[package]]
 name = "easy_node"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "drop_tracer",
 ]

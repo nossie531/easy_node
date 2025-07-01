@@ -58,6 +58,15 @@ fn from_base() {
 }
 
 #[test]
+fn as_ptr() {
+    let target = Nr::new(42);
+
+    let result = Nr::as_ptr(&target);
+
+    assert_eq!(result, Nr::as_ptr(&target.clone()));
+}
+
+#[test]
 fn base() {
     let rc = Rc::new(42);
     let target = Nr::from_base(rc.clone());
