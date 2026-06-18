@@ -1,5 +1,4 @@
-easy_node
-===
+# easy_node
 
 Smart pointer for graph nodes.
 
@@ -11,8 +10,8 @@ Smart pointer for graph nodes.
 This crate provides some smart pointers optimized for
 managing graph data structures. 
 
-* `Nr` - like `Rc`
-* `Nw` - like `Weak`.
+- `Nr` - like `Rc`
+- `Nw` - like `Weak`.
 
 These smart pointers behavior is similar to `Rc` and `Weak`.<br/>
 However, These smart pointer comparison is location based.
@@ -42,6 +41,6 @@ As workaround, we provide inter-conversions between `Nr` and `Rc`, and
 between `Nw` and `Weak`. `Nr` and `Nw` functions `as_base`, `from_base`,
 and `base` are them.
 
-## Versions
+## History
 
-See the [CHANGELOG](CHANGELOG.md).
+See [CHANGELOG](CHANGELOG.md).

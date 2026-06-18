@@ -1,7 +1,7 @@
 //! Provider of [`Nr`].
 
 use crate::prelude::*;
-use crate::util::cmp_ptr;
+use crate::util::*;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 use std::hash::{Hash, Hasher};

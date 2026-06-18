@@ -4,13 +4,13 @@ version = 4
 
 [[package]]
 name = "drop_tracer"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37f323e38f0188bceef6dca6048a6f6a3a32a58724bd3e7a5261d8e1cfabf0d2"
+checksum = "2021129ff21cb55ef859efc2416b2dbe40703b46500b6521da9f1c9f2680d6d4"
 
 [[package]]
 name = "easy_node"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "drop_tracer",
 ]

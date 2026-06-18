@@ -1,7 +1,7 @@
 //! Provider of [`Nw`].
 
 use crate::prelude::*;
-use crate::util::cmp_ptr;
+use crate::util::*;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::mem;

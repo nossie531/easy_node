@@ -1,4 +1,4 @@
 //! Crate’s prelude.
 
-pub use crate::nr::*;
-pub use crate::nw::*;
+pub use crate::Nr;
+pub use crate::Nw;
